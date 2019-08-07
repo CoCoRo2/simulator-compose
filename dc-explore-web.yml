@@ -1,0 +1,123 @@
+version: '2.3'
+
+services:
+        ros-master:
+                image: ros:kinetic-ros-core
+                container_name: ros-master
+                hostname: ros-master
+                networks:
+                        - roscomm
+                ports:
+                        - 11311:11311
+                command: roscore
+
+        ros-mb-sim:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
+                runtime: nvidia
+                depends_on:
+                        - ros-master
+                container_name: ros-mb-sim
+                hostname: ros-mb-sim
+                networks:
+                        - roscomm
+                environment:
+                        - DISPLAY=unix:0
+                        - QT_X11_NO_MITSHM=1
+                        - XAUTHORITY=/tmp/.docker.xauth
+                        - ROS_HOSTNAME=ros-mb-sim
+                        - ROS_MASTER_URI=http://ros-master:11311
+                volumes:
+                        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+                        - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+                command: /run-shells/run-sim.sh
+
+        ros-mb-odom:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-odom:latest
+                container_name: ros-mb-odom
+                hostname: ros-mb-odom
+                depends_on:
+                        - ros-mb-sim
+                networks:
+                        - roscomm
+                environment:
+                        - ROS_HOSTNAME=ros-mb-odom
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-odom-sim.sh
+
+        ros-mb-rviz:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
+                runtime: nvidia
+                depends_on:
+                        - ros-master
+                container_name: ros-mb-rviz
+                hostname: ros-mb-rviz
+                networks:
+                        - roscomm
+                environment:
+                        - DISPLAY=unix:0
+                        - QT_X11_NO_MITSHM=1
+                        - XAUTHORITY=/tmp/.docker.xauth
+                        - ROS_HOSTNAME=ros-mb-rviz
+                        - ROS_MASTER_URI=http://ros-master:11311
+                volumes:
+                        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+                        - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+                command: /run-shells/run-rviz-exploration.sh
+
+        ros-mb-safety:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-safety:latest
+                depends_on:
+                        - ros-mb-odom
+                container_name: ros-mb-safety
+                hostname: ros-mb-safety
+                networks:
+                        - roscomm
+                environment:
+                        - ROS_HOSTNAME=ros-mb-safety
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-safety-sim.sh
+
+        rosbridge-server:
+                image: repohub.enterpriselab.ch:5002/kawa/rosbridge-kinetic-server:latest
+                depends_on:
+                        - ros-master
+                container_name: rosbridge-server
+                hostname: rosbridge-server
+                networks:
+                        - roscomm
+                ports:
+                        - 9090:9090
+                environment:
+                        - ROS_HOSTNAME=rosbridge-server
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-rosbridge-server.sh
+
+        web-teleop:
+                image: repohub.enterpriselab.ch:5002/kawa/web-teleop:latest
+                depends_on:
+                        - ros-master
+                container_name: web-teleop
+                hostname: web-teleop
+                networks:
+                        - roscomm
+                ports:
+                        - 8081:8081
+                environment:
+                        - ROS_HOSTNAME=web-teleop
+                        - ROS_MASTER_URI=http://ros-master:11311
+
+        ros-explore:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-explore:latest
+                depends_on:
+                        - ros-mb-safety
+                container_name: ros-explore
+                hostname: ros-explore
+                networks:
+                        - roscomm
+                environment:
+                        - ROS_HOSTNAME=ros-explore
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-exploration.sh
+
+networks:
+        roscomm:
