@@ -55,7 +55,7 @@ services:
                 environment:
                         - ROS_HOSTNAME=ros-mb-mapserver
                         - ROS_MASTER_URI=http://ros-master:11311
-                command: /run-shells/run-mapserver-sim-explore.sh
+                command: /run-shells/run-mapserver-sim.sh
 
         ros-mb-movebase:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-movebase:latest
@@ -68,13 +68,13 @@ services:
                 environment:
                         - ROS_HOSTNAME=ros-mb-movebase
                         - ROS_MASTER_URI=http://ros-master:11311
-                command: /run-shells/run-movebase.sh
+                command: /run-shells/run-movebase-teb-sim.sh
 
         ros-mb-rviz:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
                 runtime: nvidia
                 depends_on:
-                        - ros-mb-sim
+                        - ros-master
                 container_name: ros-mb-rviz
                 hostname: ros-mb-rviz
                 networks:
@@ -88,12 +88,12 @@ services:
                 volumes:
                         - /tmp/.X11-unix:/tmp/.X11-unix:rw
                         - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
-                command: /run-shells/run-rviz-mapping.sh
+                command: /run-shells/run-teb-nav.sh
 
         ros-mb-safety:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-safety:latest
                 depends_on:
-                        - ros-mb-sim
+                        - ros-mb-odom
                 container_name: ros-mb-safety
                 hostname: ros-mb-safety
                 networks:
@@ -102,6 +102,17 @@ services:
                         - ROS_HOSTNAME=ros-mb-safety
                         - ROS_MASTER_URI=http://ros-master:11311
                 command: /run-shells/run-safety-sim.sh
+
+        known-poses-service:
+                image: repohub.enterpriselab.ch:5002/kawa/mrk40-known-poses-service:latest
+                container_name: known-poses-service
+                networks:
+                        - roscomm
+                restart: unless-stopped
+                ports:
+                        - 9092:9092
+                volumes:
+                        - poses:/usr/src/app/mrk40_known_pose_server/data
 
         rosbridge-server:
                 image: repohub.enterpriselab.ch:5002/kawa/rosbridge-kinetic-server:latest
@@ -133,5 +144,40 @@ services:
                         - ROS_HOSTNAME=web-teleop
                         - ROS_MASTER_URI=http://ros-master:11311
 
+        no-vnc:
+                image: theasp/novnc:latest
+                container_name: no-vnc
+                networks:
+                        - roscomm
+                restart: unless-stopped
+                ports:
+                        - 8080:8080
+                environment:
+                        - DISPLAY_WIDTH=1600
+                        - DISPLAY_HEIGHT=968
+                        - RUN_XTERM=no
+                        - ROS_MASTER_URI=http://ros-master:11311
+
+        ros-base-tools:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-base-tools
+                depends_on:
+                        - no-vnc
+                container_name: ros-base-tools
+                networks:
+                        - roscomm
+                environment:
+                        - DISPLAY=no-vnc:0.0
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command:
+                        - rosrun
+                        - rviz
+                        - rviz
+
+
 networks:
         roscomm:
+
+volumes:
+        maps:
+        poses:
+

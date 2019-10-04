@@ -1,0 +1,25 @@
+version: '2.3'
+
+services:
+
+        ros-mb-rviz:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
+                runtime: nvidia
+                container_name: ros-mb-rviz
+                hostname: ros-mb-rviz
+                networks:
+                        - roscomm-mb
+                environment:
+                        - DISPLAY=unix:0
+                        - QT_X11_NO_MITSHM=1
+                        - XAUTHORITY=/tmp/.docker.xauth
+                        - ROS_HOSTNAME=ros-mb-rviz
+                        - ROS_MASTER_URI=http://ros-master:11311
+                volumes:
+                        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+                        - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+                command: /run-shells/run-rviz-exploration.sh
+
+networks:
+        roscomm-mb:
+                external: true
