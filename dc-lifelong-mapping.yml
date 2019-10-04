@@ -21,8 +21,14 @@ services:
                 networks:
                         - roscomm
                 environment:
+                        - DISPLAY=unix:0
+                        - QT_X11_NO_MITSHM=1
+                        - XAUTHORITY=/tmp/.docker.xauth
                         - ROS_HOSTNAME=ros-mb-sim
                         - ROS_MASTER_URI=http://ros-master:11311
+                volumes:
+                        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+                        - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
                 command: /run-shells/run-sim.sh
 
         ros-mb-odom:
@@ -49,7 +55,7 @@ services:
                 environment:
                         - ROS_HOSTNAME=ros-slam-toolbox
                         - ROS_MASTER_URI=http://ros-master:11311
-                command: roslaunch slam_toolbox lifelong.launch
+                command: /run-shells/lifelong.sh
 
         ros-mb-movebase:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-movebase:latest
@@ -62,7 +68,20 @@ services:
                 environment:
                         - ROS_HOSTNAME=ros-mb-movebase
                         - ROS_MASTER_URI=http://ros-master:11311
-                command: /run-shells/run-movebase.sh
+                command: /run-shells/run-movebase-teb-sim.sh
+
+        # ros-explore:
+        #         image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-explore:latest
+        #         depends_on:
+        #                 - ros-mb-safety
+        #         container_name: ros-explore
+        #         hostname: ros-explore
+        #         networks:
+        #                 - roscomm
+        #         environment:
+        #                 - ROS_HOSTNAME=ros-explore
+        #                 - ROS_MASTER_URI=http://ros-master:11311
+        #         command: /run-shells/run-exploration-sim.sh
 
         ros-mb-safety:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-safety:latest
@@ -106,49 +125,25 @@ services:
                         - ROS_HOSTNAME=web-teleop
                         - ROS_MASTER_URI=http://ros-master:11311
 
-        ros-explore:
-                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-explore:latest
+        ros-mb-rviz:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
+                runtime: nvidia
                 depends_on:
-                        - ros-mb-safety
-                container_name: ros-explore
-                hostname: ros-explore
+                        - ros-mb-sim
+                container_name: ros-mb-rviz
+                hostname: ros-mb-rviz
                 networks:
                         - roscomm
                 environment:
-                        - ROS_HOSTNAME=ros-explore
+                        - DISPLAY=unix:0
+                        - QT_X11_NO_MITSHM=1
+                        - XAUTHORITY=/tmp/.docker.xauth
+                        - ROS_HOSTNAME=ros-mb-rviz
                         - ROS_MASTER_URI=http://ros-master:11311
-                command: /run-shells/run-exploration-sim.sh
-
-        gui:
-                image: theasp/novnc:latest
-                container_name: novnc-gui
-                networks:
-                        - roscomm
-                ports:
-                        - 8080:8080
-                environment:
-                        - DISPLAY_WIDTH=1600
-                        - DISPLAY_HEIGHT=968
-                        - RUN_XTERM=no
-                        - ROS_MASTER_URI=http://ros-master:11311
-
-        ros-rviz:
-                image: ros-base:latest
-                depends_on:
-                        - gui
-                container_name: ros-rviz
-                hostname: ros-rviz
-                networks:
-                        - roscomm
-                environment:
-                        - DISPLAY=gui:0.0
-                        - ROS_HOSTNAME=ros-rviz
-                        - ROS_MASTER_URI=http://ros-master:11311
-                command:
-                        - rosrun
-                        - rviz
-                        - rviz
-
+                volumes:
+                        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+                        - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+                command: /run-shells/run-rviz-mapping.sh
 
 networks:
         roscomm:
