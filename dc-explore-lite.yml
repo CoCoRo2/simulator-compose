@@ -55,6 +55,8 @@ services:
                 environment:
                         - ROS_HOSTNAME=ros-slam-toolbox
                         - ROS_MASTER_URI=http://ros-master:11311
+                volumes:
+                        - maps:/root/.ros/
                 command: /run-shells/lifelong.sh
 
         ros-mb-movebase:
@@ -70,18 +72,18 @@ services:
                         - ROS_MASTER_URI=http://ros-master:11311
                 command: /run-shells/run-movebase-teb-sim.sh
 
-        ros-explore-lite:
-                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-explore-lite:latest
-                depends_on:
-                        - ros-mb-safety
-                container_name: ros-explore-lite
-                hostname: ros-explore-lite
-                networks:
-                        - roscomm
-                environment:
-                        - ROS_HOSTNAME=ros-explore-lite
-                        - ROS_MASTER_URI=http://ros-master:11311
-                command: /run-shells/run-exploration.sh
+        # ros-explore-lite:
+        #         image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-explore-lite:latest
+        #         depends_on:
+        #                 - ros-mb-safety
+        #         container_name: ros-explore-lite
+        #         hostname: ros-explore-lite
+        #         networks:
+        #                 - roscomm
+        #         environment:
+        #                 - ROS_HOSTNAME=ros-explore-lite
+        #                 - ROS_MASTER_URI=http://ros-master:11311
+        #         command: /run-shells/run-exploration.sh
 
         ros-mb-safety:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-safety:latest
@@ -110,6 +112,17 @@ services:
                         - ROS_HOSTNAME=rosbridge-server
                         - ROS_MASTER_URI=http://ros-master:11311
                 command: /run-shells/run-rosbridge-server.sh
+
+        known-poses-service:
+                image: repohub.enterpriselab.ch:5002/kawa/mrk40-known-poses-service:latest
+                container_name: known-poses-service
+                networks:
+                        - roscomm
+                restart: unless-stopped
+                ports:
+                        - 9092:9092
+                volumes:
+                        - poses:/usr/src/app/mrk40_known_pose_server/data
 
         web-teleop:
                 image: repohub.enterpriselab.ch:5002/kawa/web-teleop:latest
@@ -147,3 +160,7 @@ services:
 
 networks:
         roscomm:
+
+volumes:
+        maps:
+        poses:
