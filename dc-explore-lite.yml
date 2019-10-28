@@ -120,7 +120,7 @@ services:
                         - roscomm
                 restart: unless-stopped
                 ports:
-                        - 9092:9092
+                        - 9092:8080
                 volumes:
                         - poses:/usr/src/app/mrk40_known_pose_server/data
 
