@@ -132,50 +132,6 @@ services:
                         - ROS_MASTER_URI=http://ros-master:11311
                 command: /run-shells/run-rosbridge-server.sh
 
-        web-teleop:
-                image: repohub.enterpriselab.ch:5002/kawa/web-teleop:latest
-                depends_on:
-                        - ros-master
-                container_name: web-teleop
-                hostname: web-teleop
-                networks:
-                        - roscomm
-                ports:
-                        - 8081:8081
-                environment:
-                        - ROS_HOSTNAME=web-teleop
-                        - ROS_MASTER_URI=http://ros-master:11311
-
-        # no-vnc:
-        #         image: theasp/novnc:latest
-        #         container_name: no-vnc
-        #         networks:
-        #                 - roscomm
-        #         restart: unless-stopped
-        #         ports:
-        #                 - 8080:8080
-        #         environment:
-        #                 - DISPLAY_WIDTH=1600
-        #                 - DISPLAY_HEIGHT=968
-        #                 - RUN_XTERM=no
-        #                 - ROS_MASTER_URI=http://ros-master:11311
-        #
-        # ros-base-tools:
-        #         image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-base-tools
-        #         depends_on:
-        #                 - no-vnc
-        #         container_name: ros-base-tools
-        #         networks:
-        #                 - roscomm
-        #         environment:
-        #                 - DISPLAY=no-vnc:0.0
-        #                 - ROS_MASTER_URI=http://ros-master:11311
-        #         command:
-        #                 - rosrun
-        #                 - rviz
-        #                 - rviz
-
-
 networks:
         roscomm:
 
