@@ -130,6 +130,7 @@ services:
                 environment:
                         - ROS_HOSTNAME=rosbridge-server
                         - ROS_MASTER_URI=http://ros-master:11311
+                        - VIRTUAL_HOST=rosbridge-server.local
                 command: /run-shells/run-rosbridge-server.sh
 
         web-missions-dashboard:
@@ -145,6 +146,14 @@ services:
                 environment:
                         - ROS_HOSTNAME=web-missions-dashboard
                         - ROS_MASTER_URI=http://ros-master:11311
+                        - VIRTUAL_HOST=web-missions-dashboard.local
+
+        nginx-proxy:
+                image: jwilder/nginx-proxy
+                ports:
+                        - 80:80
+                volumes:
+                        - /var/run/docker.sock:/tmp/docker.sock:ro
 
 networks:
         roscomm:
