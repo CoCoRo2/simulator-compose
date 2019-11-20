@@ -150,6 +150,12 @@ services:
 
         nginx-proxy:
                 image: jwilder/nginx-proxy
+                depends_on:
+                        - web-missions-dashboard
+                container_name: nginx-proxy
+                hostname: nginx-proxy
+                networks:
+                        - roscomm
                 ports:
                         - 80:80
                 volumes:
