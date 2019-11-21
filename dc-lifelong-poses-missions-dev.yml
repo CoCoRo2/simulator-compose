@@ -72,6 +72,19 @@ services:
                         - maps:/root/.ros/
                 command: /run-shells/lifelong.sh
 
+        ros-accuracy:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-accuracy:latest
+                depends_on:
+                        - ros-mb-movebase
+                container_name: ros-accuracy
+                hostname: ros-accuracy
+                networks:
+                        - roscomm
+                environment:
+                        - ROS_HOSTNAME=ros-accuracy
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-accuracy-nodes-sim.sh
+
         ros-mb-rviz:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
                 runtime: nvidia
@@ -114,7 +127,7 @@ services:
                 ports:
                         - 9092:9092
                 volumes:
-                        - poses:/usr/src/app/mrk40_known_pose_server/data
+                        - poses:/usr/src/app/known_pose_service/data
 
         rosbridge-server:
                 image: repohub.enterpriselab.ch:5002/kawa/rosbridge-kinetic-server:latest
@@ -143,13 +156,9 @@ services:
                         - roscomm
                 ports:
                         - 8081:8080
-                environment:
-                        - ROS_HOSTNAME=web-missions-dashboard
-                        - ROS_MASTER_URI=http://ros-master:11311
-                        - VIRTUAL_HOST=web-missions-dashboard.local
 
         nginx-proxy:
-                image: jwilder/nginx-proxy
+                image: repohub.enterpriselab.ch:5002/kawa/nginx-reverse-proxy:latest
                 depends_on:
                         - web-missions-dashboard
                 container_name: nginx-proxy
@@ -158,8 +167,6 @@ services:
                         - roscomm
                 ports:
                         - 80:80
-                volumes:
-                        - /var/run/docker.sock:/tmp/docker.sock:ro
 
 networks:
         roscomm:
