@@ -58,7 +58,7 @@ services:
                 command: /run-shells/run-movebase-teb-sim.sh
 
         ros-slam-toolbox:
-                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-slam-toolbox:simulation
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-slam-toolbox:latest
                 depends_on:
                         - ros-mb-movebase
                 container_name: ros-slam-toolbox
@@ -112,7 +112,7 @@ services:
                         - roscomm
                 restart: unless-stopped
                 ports:
-                        - 9092:8080
+                        - 9092:9092
                 volumes:
                         - poses:/usr/src/app/mrk40_known_pose_server/data
 
