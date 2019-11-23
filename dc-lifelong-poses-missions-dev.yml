@@ -58,7 +58,7 @@ services:
                 command: /run-shells/run-movebase-teb-sim.sh
 
         ros-slam-toolbox:
-                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-slam-toolbox:latest
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-slam-toolbox:simulation
                 depends_on:
                         - ros-mb-movebase
                 container_name: ros-slam-toolbox
@@ -71,6 +71,19 @@ services:
                 volumes:
                         - maps:/root/.ros/
                 command: /run-shells/lifelong.sh
+
+        ros-accuracy:
+                image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-accuracy:latest
+                depends_on:
+                        - ros-mb-movebase
+                container_name: ros-accuracy
+                hostname: ros-accuracy
+                networks:
+                        - roscomm
+                environment:
+                        - ROS_HOSTNAME=ros-accuracy
+                        - ROS_MASTER_URI=http://ros-master:11311
+                command: /run-shells/run-accuracy-nodes-sim.sh
 
         ros-mb-rviz:
                 image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-mb-sim-gl:latest
@@ -114,7 +127,7 @@ services:
                 ports:
                         - 9092:9092
                 volumes:
-                        - poses:/usr/src/app/mrk40_known_pose_server/data
+                        - poses:/usr/src/app/known_pose_service/data
 
         rosbridge-server:
                 image: repohub.enterpriselab.ch:5002/kawa/rosbridge-kinetic-server:latest
@@ -130,51 +143,30 @@ services:
                 environment:
                         - ROS_HOSTNAME=rosbridge-server
                         - ROS_MASTER_URI=http://ros-master:11311
+                        - VIRTUAL_HOST=rosbridge-server.local
                 command: /run-shells/run-rosbridge-server.sh
 
-        web-teleop:
-                image: repohub.enterpriselab.ch:5002/kawa/web-teleop:latest
+        web-missions-dashboard:
+                image: repohub.enterpriselab.ch:5002/kawa/web-missions-dashboard:latest
                 depends_on:
-                        - ros-master
-                container_name: web-teleop
-                hostname: web-teleop
+                        - rosbridge-server
+                container_name: web-missions-dashboard
+                hostname: web-missions-dashboard
                 networks:
                         - roscomm
                 ports:
-                        - 8081:8081
-                environment:
-                        - ROS_HOSTNAME=web-teleop
-                        - ROS_MASTER_URI=http://ros-master:11311
+                        - 8081:8080
 
-        # no-vnc:
-        #         image: theasp/novnc:latest
-        #         container_name: no-vnc
-        #         networks:
-        #                 - roscomm
-        #         restart: unless-stopped
-        #         ports:
-        #                 - 8080:8080
-        #         environment:
-        #                 - DISPLAY_WIDTH=1600
-        #                 - DISPLAY_HEIGHT=968
-        #                 - RUN_XTERM=no
-        #                 - ROS_MASTER_URI=http://ros-master:11311
-        #
-        # ros-base-tools:
-        #         image: repohub.enterpriselab.ch:5002/kawa/ros-kinetic-base-tools
-        #         depends_on:
-        #                 - no-vnc
-        #         container_name: ros-base-tools
-        #         networks:
-        #                 - roscomm
-        #         environment:
-        #                 - DISPLAY=no-vnc:0.0
-        #                 - ROS_MASTER_URI=http://ros-master:11311
-        #         command:
-        #                 - rosrun
-        #                 - rviz
-        #                 - rviz
-
+        nginx-proxy:
+                image: repohub.enterpriselab.ch:5002/kawa/nginx-reverse-proxy:latest
+                depends_on:
+                        - web-missions-dashboard
+                container_name: nginx-proxy
+                hostname: nginx-proxy
+                networks:
+                        - roscomm
+                ports:
+                        - 80:80
 
 networks:
         roscomm:
